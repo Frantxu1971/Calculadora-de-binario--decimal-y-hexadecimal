@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suite de Calculadoras Binarias</title>
+
+    <style>
+        :root {
+            --primary-color: #007BFF;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --separator-color: #dc3545; /* Rojo para la línea separadora */
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: var(--dark-color);
+            padding: 20px;
+        }
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 { text-align: center; color: var(--primary-color); }
+        p { text-align: center; color: #555; }
+        
+        /* Navegación por Pestañas */
+        #app-nav {
+            display: flex;
+            justify-content: center;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 25px;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            color: #495057;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        .nav-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        /* Contenedor de Herramientas */
+        .tool-content { display: none; }
+        .tool-content.active { display: block; }
+        
+        /* Estructura de la cuadrícula */
+        .grid-layout-container {
+            display: grid;
+            gap: 2px;
+            margin: 20px auto;
+            font-family: "Courier New", monospace;
+            font-size: 0.9em;
+            justify-content: center;
+        }
+        
+        /* Celdas de información */
+        .info-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            padding: 5px;
+            min-height: 30px;
+        }
+        .header-cell { background-color: #e9ecef; }
+        .result-cell { background-color: #e2f0ff; }
+        .hex-cell { background-color: #ffe2e6; }
+        .corner-cell { background-color: #f8f9fa; }
+
+        /* Celdas pintables */
+        .grid-cell {
+            box-sizing: border-box;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ccc;
+            background-color: #ffffff;
+            transition: background-color 0.2s ease;
+        }
+        .grid-cell.interactive { cursor: pointer; }
+        .grid-cell.interactive:hover { background-color: #e9e9e9; }
+        .is-black { background-color: #000000; }
+        .is-black.interactive:hover { background-color: #333333; }
+
+        /* Estilo para la línea separadora */
+        .nibble-separator {
+            border-left: 2px solid var(--separator-color);
+        }
+        
+        /* Estilos para la Herramienta 4 */
+        #tool-from-decimal .input-area {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        #decimal-input {
+            width: 250px;
+            height: 200px;
+            font-family: "Courier New", monospace;
+            font-size: 1.2rem;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <h1>Suite de Calculadoras Binarias</h1>
+        
+        <nav id="app-nav">
+            <button class="nav-tab active" data-tool="tool-decimal">Binario a Decimal</button>
+            <button class="nav-tab" data-tool="tool-hex">Binario a Hexadecimal</button>
+            <button class="nav-tab" data-tool="tool-full">Completa</button>
+            <button class="nav-tab" data-tool="tool-from-decimal">Decimal a Binario</button>
+        </nav>
+
+        <div id="app-container">
+            <div id="tool-decimal" class="tool-content active">
+                <h3>Calculadora de Binario a Decimal</h3>
+                <p>Haz clic en las casillas para definir 8 bytes y ver su valor decimal.</p>
+                <div id="grid-container-decimal" class="grid-layout-container"></div>
+            </div>
+            <div id="tool-hex" class="tool-content">
+                <h3>Calculadora de Binario a Hexadecimal</h3>
+                <p>Haz clic para definir 8 bytes y ver su desglose y valor hexadecimal.</p>
+                <div id="grid-container-hex" class="grid-layout-container"></div>
+            </div>
+            <div id="tool-full" class="tool-content">
+                <h3>Calculadora Completa (Decimal y Hexadecimal)</h3>
+                <p>La herramienta completa que combina todos los cálculos.</p>
+                <div id="grid-container-full" class="grid-layout-container"></div>
+            </div>
+            <div id="tool-from-decimal" class="tool-content">
+                <h3>Generador de Binario desde Decimal</h3>
+                <p>Introduce hasta 8 números decimales (0-255) abajo para generar la cuadrícula.</p>
+                <div class="input-area">
+                    <div>
+                        <label for="decimal-input"><strong>Números Decimales:</strong></label><br>
+                        <textarea id="decimal-input" placeholder="Ej: 72, 101, 108, 108, 111..."></textarea>
+                    </div>
+                    <div id="grid-container-from-decimal" class="grid-layout-container"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const nav = document.getElementById('app-nav');
+        const contents = document.querySelectorAll('.tool-content');
+        const decimalValues = Array.from({length: 8}, (_, i) => Math.pow(2, 7 - i));
+
+        nav.addEventListener('click', (e) => {
+            if (e.target.matches('.nav-tab')) {
+                document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+                contents.forEach(content => content.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(e.target.dataset.tool).classList.add('active');
+            }
+        });
+
+        function createGrid(containerId, config) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            let columns = 'repeat(8, 40px)';
+            if (config.showDecimal) columns = '60px 100px ' + columns;
+            if (config.showHex) columns = 'repeat(3, 50px) ' + columns;
+            container.style.gridTemplateColumns = columns;
+            
+            // Definir filas dinámicamente
+            let rows = 'auto auto repeat(8, 40px)';
+            if (config.showHex) rows += ' auto auto';
+            container.style.gridTemplateRows = rows;
+            
+            const headers = [{ type: 'power' }, { type: 'decimalValue' }];
+            headers.forEach(headerConfig => {
+                if (config.showHex) for(let i=0; i<3; i++) container.appendChild(document.createElement('div')).className = 'corner-cell info-cell';
+                if (config.showDecimal) for(let i=0; i<2; i++) container.appendChild(document.createElement('div')).className = 'corner-cell info-cell';
+                
+                decimalValues.forEach((val, i) => {
+                    const header = document.createElement('div');
+                    header.className = 'header-cell info-cell';
+                    if(i === 4) header.classList.add('nibble-separator');
+                    if (headerConfig.type === 'power') header.innerHTML = `2<sup>${7 - i}</sup>`;
+                    else header.textContent = val;
+                    container.appendChild(header);
+                });
+            });
+
+            for (let row = 0; row < 8; row++) {
+                if (config.showHex) {
+                    ['n1', 'n2', 'val'].forEach(type => container.appendChild(document.createElement('div')).className = `result-cell hex-cell info-cell ${containerId}-${type}-row-${row}`);
+                }
+                if (config.showDecimal) {
+                    ['sum', 'calc'].forEach(type => container.appendChild(document.createElement('div')).className = `result-cell info-cell ${containerId}-${type}-row-${row}`);
+                }
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = `grid-cell ${containerId}-cell`;
+                    if (config.isInteractive) cell.classList.add('interactive');
+                    if (col === 4) cell.classList.add('nibble-separator');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    container.appendChild(cell);
+                }
+            }
+            
+            if (config.showHex) {
+                for(let r=0; r<2; r++){
+                    if (config.showHex) for(let i=0; i<3; i++) container.appendChild(document.createElement('div')).className = 'corner-cell info-cell';
+                    if (config.showDecimal) for(let i=0; i<2; i++) container.appendChild(document.createElement('div')).className = 'corner-cell info-cell';
+                    for(let n=0; n<2; n++){
+                        for(let i=3; i>=0; i--) {
+                            const hexFooter = document.createElement('div');
+                            hexFooter.className = 'hex-cell info-cell';
+                            if(n===1 && i===3) hexFooter.classList.add('nibble-separator');
+                            hexFooter.innerHTML = (r===0) ? `2<sup>${i}</sup>` : Math.pow(2,i);
+                            container.appendChild(hexFooter);
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateGrid(containerId, config) {
+            for (let row = 0; row < 8; row++) {
+                let binaryString = "";
+                let calcParts = [];
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.querySelector(`.${containerId}-cell[data-row='${row}'][data-col='${col}']`);
+                    if (cell.classList.contains('is-black')) {
+                        binaryString += "1";
+                        if(config.showDecimal) calcParts.push(decimalValues[col]);
+                    } else {
+                        binaryString += "0";
+                    }
+                }
+                const rowSum = parseInt(binaryString, 2);
+
+                if (config.showDecimal) {
+                    document.querySelector(`.${containerId}-sum-row-${row}`).textContent = rowSum;
+                    document.querySelector(`.${containerId}-calc-row-${row}`).textContent = calcParts.length > 0 ? calcParts.join('+') : '0';
+                }
+                if (config.showHex) {
+                    const nibble1_dec = parseInt(binaryString.substring(0, 4), 2);
+                    const nibble2_dec = parseInt(binaryString.substring(4, 8), 2);
+                    document.querySelector(`.${containerId}-n1-row-${row}`).textContent = nibble1_dec;
+                    document.querySelector(`.${containerId}-n2-row-${row}`).textContent = nibble2_dec;
+                    document.querySelector(`.${containerId}-val-row-${row}`).textContent = rowSum.toString(16).toUpperCase().padStart(2, '0');
+                }
+            }
+        }
+
+        const config1 = { showDecimal: true, showHex: false, isInteractive: true };
+        createGrid('grid-container-decimal', config1);
+        updateGrid('grid-container-decimal', config1);
+        document.getElementById('grid-container-decimal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('grid-cell')) {
+                e.target.classList.toggle('is-black');
+                updateGrid('grid-container-decimal', config1);
+            }
+        });
+
+        const config2 = { showDecimal: false, showHex: true, isInteractive: true };
+        createGrid('grid-container-hex', config2);
+        updateGrid('grid-container-hex', config2);
+        document.getElementById('grid-container-hex').addEventListener('click', (e) => {
+            if (e.target.classList.contains('grid-cell')) {
+                e.target.classList.toggle('is-black');
+                updateGrid('grid-container-hex', config2);
+            }
+        });
+
+        const config3 = { showDecimal: true, showHex: true, isInteractive: true };
+        createGrid('grid-container-full', config3);
+        updateGrid('grid-container-full', config3);
+        document.getElementById('grid-container-full').addEventListener('click', (e) => {
+            if (e.target.classList.contains('grid-cell')) {
+                e.target.classList.toggle('is-black');
+                updateGrid('grid-container-full', config3);
+            }
+        });
+
+        const config4 = { showDecimal: false, showHex: true, isInteractive: false };
+        createGrid('grid-container-from-decimal', config4);
+        const decimalInput = document.getElementById('decimal-input');
+        decimalInput.addEventListener('input', () => {
+            const numbers = decimalInput.value.split(/[\s,]+/).filter(n => n !== '');
+            for (let row = 0; row < 8; row++) {
+                const num = parseInt(numbers[row], 10);
+                let binaryString = "00000000";
+                if (!isNaN(num) && num >= 0 && num <= 255) {
+                    binaryString = num.toString(2).padStart(8, '0');
+                }
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.querySelector(`#grid-container-from-decimal .grid-cell[data-row='${row}'][data-col='${col}']`);
+                    if (binaryString[col] === '1') {
+                        cell.classList.add('is-black');
+                    } else {
+                        cell.classList.remove('is-black');
+                    }
+                }
+            }
+            updateGrid('grid-container-from-decimal', config4);
+        });
+        
+        // Disparar un evento de input inicial para la herramienta 4 por si hay texto de placeholder
+        decimalInput.dispatchEvent(new Event('input'));
+    });
+    </script>
+</body>
+</html>
