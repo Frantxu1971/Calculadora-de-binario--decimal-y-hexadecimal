@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Completo de Conversión Numérica</title>
+    <style>
+        /* --- Estilos Generales --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            padding: 25px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 850px;
+        }
+        h1, h2 { text-align: center; color: #1e3a8a; }
+        h2 { margin-top: 30px; border-bottom: 2px solid #eef2ff; padding-bottom: 10px; }
+        #student-name-display {
+            text-align: center; font-size: 1.2rem; font-weight: 500;
+            color: #374151; margin-top: -15px; margin-bottom: 30px;
+        }
+        /* --- Tabla del Test --- */
+        .quiz-table {
+            width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed;
+        }
+        .quiz-table th, .quiz-table td {
+            border: 1px solid #d1d5db; padding: 12px; text-align: center; vertical-align: middle;
+        }
+        .quiz-table th { background-color: #eef2ff; font-weight: 600; }
+        .binary-representation, .interactive-binary { display: flex; justify-content: center; gap: 4px; }
+        .bit-square { width: 20px; height: 20px; border: 1px solid #9ca3af; }
+        .bit-square.filled { background-color: #111827; }
+        .clickable-bit { cursor: pointer; transition: background-color 0.2s; }
+        .answer-input {
+            width: 80%; max-width: 120px; padding: 8px; border-radius: 6px;
+            border: 2px solid #d1d5db; text-align: center; font-size: 1rem; transition: border-color 0.3s;
+        }
+        .answer-input:focus { outline: none; border-color: #4f46e5; }
+        .prompt-number { font-size: 1.2rem; font-weight: bold; }
+        
+        /* --- Feedback y Resultados --- */
+        .result-cell { font-size: 1.5rem; font-weight: bold; }
+        .correct { color: #16a34a; }
+        .incorrect { color: #dc2626; }
+        .correct-border { border-color: #16a34a !important; }
+        .incorrect-border { border-color: #dc2626 !important; }
+        .correction-feedback {
+            color: #dc2626; font-size: 0.85rem; font-weight: 500;
+            display: block; margin-top: 5px; height: 1.2em;
+        }
+
+        /* --- Contenedor de Botones --- */
+        .button-container { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 30px; }
+        .button {
+            flex: 1; min-width: 150px; padding: 15px; font-size: 1rem; font-weight: bold;
+            color: #ffffff; border: none; border-radius: 8px; cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s, opacity 0.3s;
+        }
+        .button:active { transform: scale(0.98); }
+        #check-button { background-color: #4f46e5; }
+        #check-button:hover { background-color: #4338ca; }
+        #reset-button { background-color: #6b7280; }
+        #reset-button:hover { background-color: #4b5563; }
+        .button:disabled {
+            background-color: #9ca3af; cursor: not-allowed; opacity: 0.7;
+        }
+        .button:disabled:hover { background-color: #9ca3af; }
+        .button:disabled:active { transform: none; }
+
+        /* --- Encabezado para Impresión --- */
+        #print-header { display: none; }
+
+        /* --- ESTILOS DE IMPRESIÓN --- */
+        @media print {
+            body { background-color: #fff; font-size: 10pt; }
+            .main-container { padding: 0; }
+            .quiz-container {
+                box-shadow: none; border: none; width: 100%;
+                max-width: 100%; border-radius: 0; padding: 20px;
+            }
+            .button-container, #student-name-display { display: none !important; }
+            h1 { font-size: 18pt; }
+            h2 {
+                font-size: 14pt;
+                page-break-before: auto;
+                margin-top: 20px;
+            }
+            #print-header {
+                display: block;
+                text-align: center;
+                margin-bottom: 25px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+            #print-header p { margin: 5px 0; font-size: 12pt; }
+            #print-student-name { font-weight: bold; }
+            #print-grade {
+                font-weight: bold;
+                font-size: 13pt;
+            }
+
+            .bit-square.filled { background-color: #000 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact;}
+            .quiz-table { margin-bottom: 15px; }
+            .quiz-table th, .quiz-table td { padding: 8px; }
+            .answer-input { border: 1px solid #ccc; padding: 4px; }
+            .correction-feedback, .result-cell { color: #000 !important; }
+            .correction-feedback { font-style: italic; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="quiz-container">
+            <div id="print-header">
+                <p id="print-student-name"></p>
+                <p id="print-score"></p>
+                <p id="print-grade"></p>
+            </div>
+
+            <h1>Test Completo de Conversión Numérica</h1>
+            <p id="student-name-display"></p>
+
+            <div id="quiz-sections">
+                <!-- El contenido se genera con JS -->
+            </div>
+
+            <div class="button-container">
+                <button id="reset-button" class="button">Volver a empezar</button>
+                <button id="check-button" class="button">Corregir y Generar Informe</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- ELEMENTOS DEL DOM ---
+        const quizSectionsContainer = document.getElementById('quiz-sections');
+        const checkButton = document.getElementById('check-button');
+        const resetButton = document.getElementById('reset-button');
+        const studentNameDisplay = document.getElementById('student-name-display');
+        const printHeaderName = document.getElementById('print-student-name');
+        const printHeaderScore = document.getElementById('print-score');
+        const printHeaderGrade = document.getElementById('print-grade');
+        
+        const numQuestionsPerSection = 4;
+        let quizData = { bin: [], dec: [], hex: [] };
+        let totalCorrectAnswers = 0;
+        let totalPossibleAnswers = 0;
+
+        function initializeApp() {
+            let studentName = prompt("Por favor, introduce tu nombre completo:", "");
+            if (!studentName || studentName.trim() === "") {
+                studentName = "Estudiante Anónimo/a";
+            }
+            studentNameDisplay.textContent = `Estudiante: ${studentName}`;
+            generateQuiz();
+        }
+        
+        function generateQuiz() {
+            checkButton.disabled = false;
+            totalCorrectAnswers = 0;
+            totalPossibleAnswers = 0;
+            quizData = { bin: [], dec: [], hex: [] };
+            quizSectionsContainer.innerHTML = `
+                <h2>Binario ➔ Decimal y Hexadecimal</h2>
+                <table class="quiz-table"><thead><tr><th style="width: 40%;">Representación Binaria</th><th>Decimal</th><th>Hexadecimal</th><th style="width: 15%;">Resultado</th></tr></thead><tbody id="quiz-body-bin"></tbody></table>
+                <h2>Decimal ➔ Binario y Hexadecimal</h2>
+                <table class="quiz-table"><thead><tr><th style="width: 20%;">Decimal</th><th style="width: 40%;">Binario (Haz clic)</th><th>Hexadecimal</th><th style="width: 15%;">Resultado</th></tr></thead><tbody id="quiz-body-dec"></tbody></table>
+                <h2>Hexadecimal ➔ Binario y Decimal</h2>
+                <table class="quiz-table"><thead><tr><th style="width: 20%;">Hexadecimal</th><th style="width: 40%;">Binario (Haz clic)</th><th>Decimal</th><th style="width: 15%;">Resultado</th></tr></thead><tbody id="quiz-body-hex"></tbody></table>
+            `;
+            generateSection('bin', document.getElementById('quiz-body-bin'));
+            generateSection('dec', document.getElementById('quiz-body-dec'));
+            generateSection('hex', document.getElementById('quiz-body-hex'));
+        }
+
+        function generateSection(type, container) {
+            for (let i = 0; i < numQuestionsPerSection; i++) {
+                const decVal = Math.floor(Math.random() * 255) + 1;
+                const binVal = decVal.toString(2).padStart(8, '0');
+                const hexVal = decVal.toString(16).toUpperCase();
+                quizData[type].push({ decimal: decVal, binary: binVal, hex: hexVal });
+                const row = document.createElement('tr');
+                let html = '';
+                const interactiveBits = `<div class="interactive-binary" id="${type}-bin-ans-${i}">${Array(8).fill(0).map((_, j) => `<div class="bit-square clickable-bit" data-value="0" id="${type}-bit-${i}-${j}"></div>`).join('')}</div><div class="correction-feedback" id="${type}-bin-corr-${i}"></div>`;
+                switch(type) {
+                    case 'bin':
+                        html = `<td><div class="binary-representation">${binVal.split('').map(b => `<div class="bit-square ${b === '1' ? 'filled' : ''}"></div>`).join('')}</div></td>
+                                <td><input type="number" class="answer-input" id="bin-dec-ans-${i}" placeholder="Valor"><div class="correction-feedback" id="bin-dec-corr-${i}"></div></td>
+                                <td><input type="text" class="answer-input" id="bin-hex-ans-${i}" placeholder="Valor"><div class="correction-feedback" id="bin-hex-corr-${i}"></div></td>`;
+                        break;
+                    case 'dec':
+                        html = `<td><span class="prompt-number">${decVal}</span></td><td>${interactiveBits}</td>
+                                <td><input type="text" class="answer-input" id="dec-hex-ans-${i}" placeholder="Valor"><div class="correction-feedback" id="dec-hex-corr-${i}"></div></td>`;
+                        break;
+                    case 'hex':
+                        html = `<td><span class="prompt-number">${hexVal}</span></td><td>${interactiveBits}</td>
+                                <td><input type="number" class="answer-input" id="hex-dec-ans-${i}" placeholder="Valor"><div class="correction-feedback" id="hex-dec-corr-${i}"></div></td>`;
+                        break;
+                }
+                row.innerHTML = `${html}<td class="result-cell" id="${type}-result-${i}"></td>`;
+                container.appendChild(row);
+            }
+        }
+        
+        document.querySelector('.quiz-container').addEventListener('click', e => {
+            if (e.target.classList.contains('clickable-bit')) {
+                const bit = e.target;
+                bit.dataset.value = bit.dataset.value === '0' ? '1' : '0';
+                bit.classList.toggle('filled');
+            }
+        });
+
+        function checkAndPrint() {
+            totalCorrectAnswers = 0;
+            totalPossibleAnswers = 0;
+            const validate = (el, userVal, correctVal, corrEl, type = 'text') => {
+                let isCorrect = (type === 'number') ? (parseInt(userVal) === correctVal) : (userVal.toString().toUpperCase().trim() === correctVal.toString().toUpperCase());
+                totalPossibleAnswers++;
+                if (isCorrect) totalCorrectAnswers++;
+                el.classList.toggle('correct-border', isCorrect);
+                el.classList.toggle('incorrect-border', !isCorrect);
+                corrEl.textContent = isCorrect ? '' : `Correcto: ${correctVal}`;
+                return isCorrect;
+            };
+
+            quizData.bin.forEach((q, i) => {
+                const decCorrect = validate(document.getElementById(`bin-dec-ans-${i}`), document.getElementById(`bin-dec-ans-${i}`).value, q.decimal, document.getElementById(`bin-dec-corr-${i}`), 'number');
+                const hexCorrect = validate(document.getElementById(`bin-hex-ans-${i}`), document.getElementById(`bin-hex-ans-${i}`).value, q.hex, document.getElementById(`bin-hex-corr-${i}`));
+                const resultCell = document.getElementById(`bin-result-${i}`);
+                resultCell.textContent = (decCorrect && hexCorrect) ? '✔️' : '❌';
+                resultCell.className = `result-cell ${(decCorrect && hexCorrect) ? 'correct' : 'incorrect'}`;
+            });
+            quizData.dec.forEach((q, i) => {
+                const userBinary = Array.from(document.querySelectorAll(`[id^="dec-bit-${i}-"]`)).map(bit => bit.dataset.value).join('');
+                const binCorrect = validate(document.getElementById(`dec-bin-ans-${i}`), userBinary, q.binary, document.getElementById(`dec-bin-corr-${i}`));
+                const hexCorrect = validate(document.getElementById(`dec-hex-ans-${i}`), document.getElementById(`dec-hex-ans-${i}`).value, q.hex, document.getElementById(`dec-hex-corr-${i}`));
+                const resultCell = document.getElementById(`dec-result-${i}`);
+                resultCell.textContent = (binCorrect && hexCorrect) ? '✔️' : '❌';
+                resultCell.className = `result-cell ${(binCorrect && hexCorrect) ? 'correct' : 'incorrect'}`;
+            });
+            quizData.hex.forEach((q, i) => {
+                const userBinary = Array.from(document.querySelectorAll(`[id^="hex-bit-${i}-"]`)).map(bit => bit.dataset.value).join('');
+                const binCorrect = validate(document.getElementById(`hex-bin-ans-${i}`), userBinary, q.binary, document.getElementById(`hex-bin-corr-${i}`));
+                const decCorrect = validate(document.getElementById(`hex-dec-ans-${i}`), document.getElementById(`hex-dec-ans-${i}`).value, q.decimal, document.getElementById(`hex-dec-corr-${i}`), 'number');
+                const resultCell = document.getElementById(`hex-result-${i}`);
+                resultCell.textContent = (binCorrect && decCorrect) ? '✔️' : '❌';
+                resultCell.className = `result-cell ${(binCorrect && decCorrect) ? 'correct' : 'incorrect'}`;
+            });
+            
+            checkButton.disabled = true;
+
+            // --- SECCIÓN MODIFICADA ---
+            // Preparar el encabezado de impresión
+            printHeaderName.textContent = studentNameDisplay.textContent;
+            printHeaderScore.textContent = `Puntuación: ${totalCorrectAnswers} de ${totalPossibleAnswers} respuestas correctas.`;
+
+            // Calcular y mostrar la nota proporcional
+            if (totalPossibleAnswers > 0) {
+                const finalGrade = (totalCorrectAnswers * 10) / totalPossibleAnswers;
+                printHeaderGrade.textContent = `Nota Final: ${finalGrade.toFixed(2)} sobre 10`;
+            } else {
+                printHeaderGrade.textContent = "No se ha podido calcular la nota.";
+            }
+            
+            window.print();
+        }
+        
+        checkButton.addEventListener('click', checkAndPrint);
+        resetButton.addEventListener('click', generateQuiz);
+        
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
